@@ -82,6 +82,18 @@
     <section data-screen="profile" class="space-y-4">
       <!-- Profile Details -->
       <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        ```html
+<!-- DEBUGGING INFO - REMOVE LATER -->
+<div class="rounded-2xl bg-white/5 p-4 text-sm mt-3">
+    <div class="opacity-70">Internal User ID</div>
+    <div id="debugUserId" class="text-lg font-semibold">Loading...</div>
+    <div class="opacity-70 mt-2">Is Admin Query</div>
+    <div id="debugIsAdminQuery" class="text-lg font-semibold">Loading...</div>
+    <div class="opacity-70 mt-2">Firebase Status</div>
+    <div id="debugFirebaseStatus" class="text-lg font-semibold">Loading...</div>
+</div>
+<!-- END DEBUGGING INFO -->
+```
         <h3 class="font-semibold mb-2">Profile Details</h3>
         <div class="mt-2 grid sm:grid-cols-2 gap-3">
           <div class="rounded-2xl bg-white/5 p-4 text-sm">
@@ -299,6 +311,13 @@
       copyRef: document.getElementById('copyRef'),
       shareRef: document.getElementById('shareRef'),
       refCount: document.getElementById('refCount'),
+      ```javascript
+  // DEBUGGING ELEMENTS
+  debugUserId: document.getElementById('debugUserId'),
+  debugIsAdminQuery: document.getElementById('debugIsAdminQuery'),
+  debugFirebaseStatus: document.getElementById('debugFirebaseStatus')
+  // END DEBUGGING ELEMENTS
+```
       // Wallet
       walletOverview: document.getElementById('walletOverview'),
       withdrawForm: document.getElementById('withdrawForm'),
@@ -602,6 +621,13 @@
             if(els.pfRefCount) els.pfRefCount.textContent = data.referrals ?? 0;
             if(els.refCount) els.refCount.textContent = data.referrals ?? 0;
             state.lastDaily = data.lastDaily ? data.lastDaily.toDate() : null;
+            ```javascript
+    // DEBUGGING INFO UPDATE
+    if(els.debugUserId) els.debugUserId.textContent = state.userId;
+    if(els.debugIsAdminQuery) els.debugIsAdminQuery.textContent = isAdminQuery ? 'True' : 'False';
+    if(els.debugFirebaseStatus) els.debugFirebaseStatus.textContent = state.firebaseEnabled ? 'Enabled' : 'Disabled (Local)';
+    // END DEBUGGING INFO UPDATE
+```    *   এছাড়াও, `renderFromLocal` ফাংশনের শেষেও (যেখানে `renderTasks(u.tasksCompleted||[]);` আছে) এই একই ডিবাগিং লাইনগুলো যোগ করুন, যাতে লোকাল মোডেও তথ্য দেখা যায়।
             setRefLink();
 
             // Update Wallet displays
@@ -741,6 +767,13 @@
       await initFirebaseIfPossible();
       const inviter = q.get('ref');
       const me = await ensureUser(state.userId, state.name);
+      ```javascript
+    // Initial DEBUGGING INFO UPDATE
+    if(els.debugUserId) els.debugUserId.textContent = state.userId;
+    if(els.debugIsAdminQuery) els.debugIsAdminQuery.textContent = isAdminQuery ? 'True' : 'False';
+    if(els.debugFirebaseStatus) els.debugFirebaseStatus.textContent = state.firebaseEnabled ? 'Enabled' : 'Disabled (Local)';
+    // END DEBUGGING INFO UPDATE
+```
       renderTasks(me.tasksCompleted || []); // Initial render of tasks based on user data
       subscribeUI(state.userId);
       showAdminIfAllowed();
