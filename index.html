@@ -1,994 +1,180 @@
+<!-- USER_APP.HTML -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PEPE PARODY </title>
-
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
-  <!-- Monetag SDK -->
-  <script src='//libtl.com/sdk.js' data-zone='9735186' data-sdk='show_9735186'></script>
-
-  <!-- TailwindCSS CDN -->
+  <title>PEPE PARODY</title>
+  <!-- Tailwind, Firebase, and Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            bg1: '#0b1220',
-            bg2: '#0e1624',
-            card: 'rgba(255,255,255,0.06)',
-            acc: '#22c55e',
-            acc2: '#38bdf8',
-            warn: '#f97316'
-          },
-          boxShadow: {
-            soft: '0 10px 30px rgba(0,0,0,.25)'
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Firebase (v10 modular CDN) -->
-  <script type="module" crossorigin src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
-  <script type="module" crossorigin src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
-
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
   <style>
-    .glass{backdrop-filter: blur(10px)}
-    .gradient-blob{position:absolute;inset:auto auto -80px -80px;width:320px;height:320px;filter:blur(60px);background:radial-gradient(circle at 30% 30%,#22c55e55,transparent 60%),radial-gradient(circle at 70% 40%,#38bdf855,transparent 60%)}
-    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:1rem; cursor: pointer;}
-    .tab-active{background:rgba(255,255,255,.12)}
-    .hide{display:none}
-    .banner{padding:.5rem 1rem;border-radius:.75rem;margin-bottom:.5rem}
-    input:focus, select:focus { border-color: var(--acc); outline: none; }
-    .wd-hint-popup {
-        background-color: rgba(249, 115, 22, 0.2); color: #f97316; padding: 0.5rem 0.75rem;
-        border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-align: center;
-        margin-top: 0.5rem; transition: opacity 0.3s ease-in-out;
-    }
-    .fade-in {
-      animation: fadeIn 0.3s ease-in-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .admin-withdrawal-item {
-      border-left: 3px solid #f97316;
-      padding-left: 0.75rem;
-    }
-    .admin-withdrawal-item.completed {
-      border-left-color: #22c55e;
-    }
-    .admin-withdrawal-item.rejected {
-      border-left-color: #ef4444;
-    }
+    .glass{backdrop-filter: blur(10px)} .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:1rem; cursor: pointer;} .tab-active{background:rgba(255,255,255,.12)} .hide{display:none} input:focus { border-color: #22c55e; outline: none; }
   </style>
 </head>
-<body class="min-h-dvh text-white bg-gradient-to-b from-bg1 to-bg2">
-  <div class="relative mx-auto max-w-3xl p-4 sm:p-6 pb-24 space-y-4">
-    <div id="firebaseBanner" class="hide banner bg-warn/20 text-warn text-sm flex justify-between items-center">
-      <span id="firebaseErrorMsg">Could not connect to database.</span>
-      <button id="retryConnection" class="ml-2 px-3 py-1 bg-warn/30 rounded-lg text-xs hover:bg-warn/40">Retry</button>
-    </div>
-    <div class="gradient-blob"></div>
+<body class="min-h-dvh text-white bg-gradient-to-b from-[#0b1220] to-[#0e1624]">
+<div class="relative mx-auto max-w-3xl p-4 sm:p-6 pb-24 space-y-4">
 
-    <!-- Top Bar -->
-    <header class="flex items-center justify-between glass rounded-b-2xl border-b border-white/10 p-4 shadow-lg">
-      <div class="flex items-center gap-3">
-        <div class="h-11 w-11 rounded-2xl bg-acc grid place-items-center text-black font-extrabold shadow-soft overflow-hidden">
-            <img src="https://www.svgrepo.com/show/473727/pepe-coin.svg" alt="PEPE Coin" class="h-full w-full object-cover">
+    <!-- LOGIN/SIGNUP SCREEN -->
+    <section data-screen="login" class="space-y-4">
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft text-center">
+        <h2 class="text-2xl font-bold mb-4">Welcome to PEPE PARODY</h2>
+        <div class="space-y-3">
+          <input id="loginEmail" type="email" placeholder="Enter your email" class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-white">
+          <input id="loginPassword" type="password" placeholder="Enter your password" class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-white">
         </div>
-        <div>
-          <h1 id="mainHeader" class="text-2xl font-bold tracking-tight">PEPE PARODY</h1>
-          <p class="text-xs text-white/70">_____</p>
+        <div class="flex gap-3 mt-4">
+          <button id="loginBtn" class="btn flex-1 bg-acc text-black font-semibold">Login</button>
+          <button id="signupBtn" class="btn flex-1 bg-acc2 text-black font-semibold">Sign Up</button>
         </div>
+        <p id="authHint" class="text-xs text-orange-400 mt-3 h-4"></p>
       </div>
-      <div id="connectionStatus" class="flex items-center text-xs">
-        <span class="status-dot w-2 h-2 rounded-full bg-acc mr-1"></span>
-        <span id="statusText">Connected</span>
-      </div>
-    </header>
+    </section>
 
-    <!-- PROFILE SCREEN -->
-    <section data-screen="profile" class="space-y-4 fade-in">
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
-        <h3 class="font-semibold mb-2">Profile Details</h3>
-        <div class="mt-2 grid sm:grid-cols-2 gap-3">
-          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Name</div><div id="pfName" class="text-lg font-semibold">User</div></div>
-          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Telegram ID</div><div id="pfId" class="text-lg font-semibold">–</div></div>
-          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Referred By</div><div id="pfReferredBy" class="text-lg font-semibold">–</div></div>
-          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Total Referrals</div><div id="pfRefCount" class="text-lg font-semibold">0</div></div>
+    <!-- MAIN APP SCREENS (Profile, Tasks, Wallet) -->
+    <main id="mainApp" class="hide space-y-4">
+      <!-- Top Bar with Logout -->
+      <header class="flex items-center justify-between glass rounded-b-2xl border-b border-white/10 p-4 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="h-11 w-11 rounded-2xl bg-acc grid place-items-center text-black font-extrabold shadow-soft overflow-hidden"><img src="https://www.svgrepo.com/show/473727/pepe-coin.svg" alt="PEPE Coin" class="h-full w-full object-cover"></div>
+            <div><h1 class="text-2xl font-bold tracking-tight">PEPE PARODY</h1><p class="text-xs text-white/70" id="userEmailDisplay"></p></div>
         </div>
-      </div>
-      <div id="devFallback" class="mt-4 hidden">
-        <label class="text-xs text-white/70">Not inside Telegram? Enter a name to demo:</label>
-        <div class="mt-2 flex gap-2">
-          <input id="mockName" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border border-white/10" placeholder="Your name" />
-          <button id="mockStart" class="btn bg-acc text-black font-semibold hover:opacity-90">Start</button>
-        </div>
-      </div>
-      <section class="grid grid-cols-2 gap-3">
-        <button id="dailyCheckInBtn" class="action glass rounded-2xl border border-white/10 p-4 bg-card hover:bg-white/10"><div class="text-2xl font-extrabold">+10</div><div class="text-xs text-white/70">Daily Check‑in</div></button>
-        <button id="goToTasksBtn" class="action glass rounded-2xl border border-white/10 p-4 bg-card hover:bg-white/10"><div class="text-2xl font-extrabold">→</div><div class="text-xs text-white/70">Go to Tasks</div></button>
-      </section>
-      <section class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <h3 class="font-semibold">Refer & Earn</h3>
-            <p class="text-xs text-white/70">Invite friends and get <span class="font-semibold">+20 coins</span> for each new user.</p>
-          </div>
-          <div class="text-right text-xs opacity-75"><div>Referrals: <span id="refCount">0</span></div></div>
-        </div>
-        <div class="mt-2 space-y-2">
-          <input id="refLink" readonly class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-xs" />
-          <div class="flex gap-2">
-            <button id="copyRef" class="btn flex-1 bg-acc text-black font-semibold hover:opacity-90">Copy Link</button>
-            <button id="shareRef" class="btn flex-1 bg-acc2 text-black font-semibold hover:opacity-90">Share</button>
+        <button id="logoutBtn" class="btn bg-white/10 text-xs">Logout</button>
+      </header>
+
+      <!-- Profile Screen -->
+      <section data-screen="profile" class="space-y-4">
+        <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+          <h3 class="font-semibold mb-2">Profile Details</h3>
+          <div class="mt-2 grid sm:grid-cols-2 gap-3">
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Name</div><div id="pfName" class="text-lg font-semibold">User</div></div>
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">User ID</div><div id="pfId" class="text-lg font-semibold break-all">–</div></div>
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Referred By</div><div id="pfReferredBy" class="text-lg font-semibold">–</div></div>
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Total Referrals</div><div id="pfRefCount" class="text-lg font-semibold">0</div></div>
           </div>
         </div>
+        <!-- Other sections like Tasks and Wallet need to be added here -->
       </section>
-    </section>
+    </main>
 
-    <!-- TASKS SCREEN -->
-    <section data-screen="tasks" class="space-y-4 hide fade-in">
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
-        <h3 class="font-semibold mb-2">Tasks</h3>
-        <p class="text-xs text-white/70">Complete tasks to earn coins. Some tasks are repeatable.</p>
-        <div id="taskList" class="mt-3 grid gap-3"></div>
+    <!-- Bottom Nav -->
+    <nav id="navBar" class="fixed bottom-0 inset-x-0 mx-auto max-w-3xl bg-white/5 backdrop-blur border-t border-white/10 p-2 rounded-t-2xl shadow-lg hide">
+      <div id="navGrid" class="grid grid-cols-3 gap-2">
+        <button data-nav="profile" class="btn tab-active font-semibold">Profile</button>
+        <button data-nav="tasks" class="btn font-semibold">Tasks</button>
+        <button data-nav="wallet" class="btn font-semibold">Wallet</button>
       </div>
-    </section>
+    </nav>
+</div>
 
-    <!-- WALLET SCREEN -->
-    <section data-screen="wallet" class="space-y-4 hide fade-in">
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
-        <div id="walletOverview">
-            <h3 class="font-semibold mb-2">Wallet Overview</h3>
-            <div class="mt-2 grid grid-cols-2 gap-3">
-              <div class="rounded-2xl bg-white/5 p-4"><div class="text-xs opacity-70">Balance</div><div id="walletBalance" class="text-3xl font-black">0</div></div>
-              <div class="rounded-2xl bg-white/5 p-4"><div class="text-xs opacity-70">Total Referrals</div><div id="walletRefs" class="text-3xl font-black">0</div></div>
-            </div>
-            <div class="mt-3 flex gap-2"><button id="showWithdrawForm" class="btn bg-acc text-black font-semibold hover:bg-acc/90">Withdraw Funds</button></div>
-        </div>
-        <div id="withdrawForm" class="space-y-4 hide">
-            <h3 class="font-semibold mb-2">Withdrawal Request</h3>
-            <p class="text-xs text-white/70">Minimum withdraw: <span id="minWd">100</span> coins</p>
-            <div class="grid sm:grid-cols-2 gap-3 mt-3">
-              <div class="space-y-2"><label for="wdAmount" class="text-xs text-white/70">Amount</label><input id="wdAmount" type="number" class="w-full rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., 200" /></div>
-              <div class="space-y-2"><label for="wdAddress" class="text-xs text-white/70">Binance UID</label><input id="wdAddress" class="w-full rounded-xl px-3 py-2 bg-white/10 border" placeholder="Please enter your uid" /></div>
-            </div>
-            <div class="mt-3 flex gap-2 items-center">
-              <button id="submitWithdraw" class="btn bg-acc text-black font-semibold hover:bg-acc/90">Submit</button>
-              <button id="hideWithdrawForm" class="btn bg-white/10 text-white font-semibold hover:bg-white/20">Back</button>
-            </div>
-            <div class="flex justify-center"><span id="wdHint" class="opacity-0 wd-hint-popup"></span></div>
-        </div>
-      </div>
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
-        <div class="flex items-center justify-between"><h3 class="font-semibold">My Withdrawal History</h3><span class="text-xs opacity-70">Completed: <span id="completedWdCount">0</span></span></div>
-        <ul id="wdList" class="mt-3 space-y-2 text-sm max-h-64 overflow-auto pr-1"></ul>
-      </div>
-    </section>
+<script type="module">
+  // --- Firebase Imports ---
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-    <!-- ADMIN SCREEN -->
-    <section data-screen="admin" class="space-y-4 hide fade-in">
-      <div id="adminPanel" class="glass rounded-3xl border border-white/10 p-5 bg-black/40 shadow-soft">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Admin Panel</h3>
-          <span class="text-xs text-white/60" id="adminHint"></span>
-        </div>
-        <div class="grid sm:grid-cols-1 gap-4 mt-3">
-          <div class="space-y-2"><label for="setBalance" class="text-xs text-white/70">Set Balance</label><div class="flex gap-2"><input id="setBalance" type="number" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., 500" /><button id="applySet" class="btn bg-acc text-black font-semibold hover:opacity-90">Apply</button></div></div>
-          <div class="space-y-2"><label for="adjustBalance" class="text-xs text-white/70">Adjust Balance (+/−)</label><div class="flex gap-2"><input id="adjustBalance" type="number" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., +25" /><button id="applyAdjust" class="btn bg-acc2 text-black font-semibold hover:opacity-90">Update</button></div></div>
-          <div class="space-y-2"><label class="text-xs text-white/70">Data Actions</label><div class="flex gap-2"><button id="resetUser" class="btn bg-white/10 hover:bg-white/20">Reset user</button><button id="exportData" class="btn bg-white/10 hover:bg-white/20">Export</button></div></div>
-        </div>
-      </div>
+  // --- Config ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBAXVxTPaiP8uFoQH5jEG2oUovvrrXbJDo",
+    authDomain: "pepe-earning-app.firebaseapp.com",
+    projectId: "pepe-earning-app",
+    storageBucket: "pepe-earning-app.firebasestorage.app",
+    messagingSenderId: "307051092104",
+    appId: "1:307051092104:web:0649d26ebe30d61e63e73d"
+  };
 
-      <!-- Pending Withdrawals Section -->
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-black/40 shadow-soft">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold">Pending Withdrawal Requests</h3>
-          <span class="text-xs opacity-70">Total: <span id="pendingWdCount">0</span></span>
-        </div>
-        <div id="pendingWithdrawals" class="space-y-3 max-h-96 overflow-y-auto">
-          <!-- Pending withdrawals will be loaded here -->
-        </div>
-      </div>
+  // --- Initialize Firebase ---
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-      <!-- All Withdrawals History -->
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-black/40 shadow-soft">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold">All Withdrawal History</h3>
-          <span class="text-xs opacity-70">Total: <span id="allWdCount">0</span></span>
-        </div>
-        <div id="allWithdrawals" class="space-y-3 max-h-96 overflow-y-auto">
-          <!-- All withdrawals will be loaded here -->
-        </div>
-      </div>
-    </section>
+  // --- Element Selectors ---
+  const loginScreen = document.querySelector('[data-screen="login"]');
+  const mainApp = document.getElementById('mainApp');
+  const navBar = document.getElementById('navBar');
+  const loginEmailEl = document.getElementById('loginEmail');
+  const loginPasswordEl = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn');
+  const signupBtn = document.getElementById('signupBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const authHint = document.getElementById('authHint');
+  const pfNameEl = document.getElementById('pfName');
+  const pfIdEl = document.getElementById('pfId');
+  const userEmailDisplayEl = document.getElementById('userEmailDisplay');
 
-    <footer class="pt-2 pb-8 text-center text-xs text-white/50">© <span id="year"></span> PEPE BOT</footer>
-  </div>
-
-  <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 inset-x-0 mx-auto max-w-3xl bg-white/5 backdrop-blur border-t border-white/10 p-2 rounded-t-2xl shadow-lg">
-    <div id="navGrid" class="grid grid-cols-3 gap-2">
-      <button data-nav="profile" class="btn tab-active font-semibold hover:bg-white/10">Profile</button>
-      <button data-nav="tasks" class="btn font-semibold hover:bg-white/10">Tasks</button>
-      <button data-nav="wallet" class="btn font-semibold hover:bg-white/10">Wallet</button>
-    </div>
-  </nav>
-
-  <script type="module">
-    // --- Firebase Imports ---
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-      runTransaction, collection, addDoc, query, orderBy, onSnapshot, where, getDocs
-    } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js';
-
-    // ================== 1. CONFIGURATION ==================
-    const firebaseConfig = {
-      apiKey: "AIzaSyBAXvxTPaiP8UoFQH5Jg2O0UovrXrXbJDo",
-      authDomain: "pepe-earning-app.firebaseapp.com",
-      projectId: "pepe-earning-app",
-      storageBucket: "pepe-earning-app.appspot.com",
-      messagingSenderId: "307051092104",
-      appId: "1:307051092104:web:0649d26ebe30d61e63e73d"
-    };
-
-    const REFERRAL_BONUS = 150;
-    const DAILY_REWARD = 50;
-    const MIN_WITHDRAW = 5000;
-    const ADMIN_IDS = ["5481629779,5146589219"];
-
-    const TASKS = [
-      { id: 'watch_monetag_ad', title: 'Watch Ad & Earn', reward: 50, repeatable: true },
-      { id:'join_channel', title:'Join Telegram Channel', reward: 25, url: 'https://t.me/example_pepe_channel' },
-      { id:'follow_twitter', title:'Follow X/Twitter', reward: 30, url: 'https://x.com/example_pepe_bot' },
-      { id:'invite_friend', title:'Invite a friend', reward: 40 },
-    ];
-    
-    // ================== 2. GLOBAL STATE & ELEMENTS ==================
-    const state = { userId: null, name: 'User', firebaseEnabled: false, isOnline: false };
-    let app, db; // Firebase instances
-    const els = {};
-    const elIds = [
-        'mainHeader', 'navGrid', 'firebaseBanner', 'firebaseErrorMsg', 'retryConnection', 
-        'connectionStatus', 'statusText', 'devFallback', 'mockName', 'mockStart', 'year', 'refLink', 'copyRef', 
-        'shareRef', 'refCount', 'walletOverview', 'withdrawForm', 'showWithdrawForm', 'hideWithdrawForm', 
-        'walletBalance', 'walletRefs', 'wdList', 'completedWdCount', 'minWd', 'wdAmount', 'wdAddress', 
-        'submitWithdraw', 'wdHint', 'pfName', 'pfId', 'pfReferredBy', 'pfRefCount', 'adminPanel', 'adminHint', 
-        'setBalance', 'applySet', 'adjustBalance', 'applyAdjust', 'resetUser', 'exportData', 'taskList',
-        'dailyCheckInBtn', 'goToTasksBtn', 'pendingWithdrawals', 'allWithdrawals', 'pendingWdCount', 'allWdCount'
-    ];
-    elIds.forEach(id => els[id] = document.getElementById(id));
-    
-    // ================== 3. HELPER FUNCTIONS ==================
-    const showHint = (message) => {
-        if (!els.wdHint) return;
-        els.wdHint.textContent = message;
-        els.wdHint.classList.remove('opacity-0');
-        setTimeout(() => els.wdHint.classList.add('opacity-0'), 3000);
-    };
-    
-    const updateConnectionStatus = (isConnected) => {
-      state.isOnline = isConnected;
-      const statusDot = document.querySelector('.status-dot');
-      if (statusDot) {
-        statusDot.style.backgroundColor = isConnected ? '#22c55e' : '#f97316';
-      }
-      if (els.statusText) {
-        els.statusText.textContent = isConnected ? 'Connected' : 'Offline';
-      }
-    };
-    
-    const showFirebaseError = (message) => {
-      if (els.firebaseBanner && els.firebaseErrorMsg) {
-        els.firebaseErrorMsg.textContent = message;
-        els.firebaseBanner.classList.remove('hide');
-      }
-      updateConnectionStatus(false);
-    };
-    
-    const hideFirebaseError = () => {
-      if (els.firebaseBanner) {
-        els.firebaseBanner.classList.add('hide');
-      }
-      updateConnectionStatus(true);
-    };
-
-    // ================== 4. CORE LOGIC (Database, Tasks, etc.) ==================
-    async function addBalance(uid, delta, reason) {
-        try {
-            if (!db) throw new Error("Firestore not initialized");
-            await runTransaction(db, async (tx) => {
-                const userRef = doc(db, 'users', String(uid));
-                const userDoc = await tx.get(userRef);
-                if (!userDoc.exists()) throw new Error("User does not exist!");
-                const newBalance = Math.max(0, (userDoc.data().balance || 0) + delta);
-                tx.update(userRef, { balance: newBalance });
-            });
-            await addActivity(uid, `${reason} ${delta >= 0 ? '+' : ''}${delta} coins`);
-        } catch (err) {
-            console.error("Balance update failed:", err);
-            showHint("Could not update balance.");
+  // --- Auth State Management ---
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      // User is logged in
+      loginScreen.classList.add('hide');
+      mainApp.classList.remove('hide');
+      navBar.classList.remove('hide');
+      
+      userEmailDisplayEl.textContent = user.email;
+      pfIdEl.textContent = user.uid;
+      
+      // Listen for real-time updates to user data
+      const userRef = doc(db, "users", user.uid);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          pfNameEl.textContent = data.name || 'User';
+          // Update other UI elements (balance, referrals, etc.) here
+          // Example:
+          // document.getElementById('walletBalance').textContent = data.balance || 0;
         }
+      });
+
+    } else {
+      // User is logged out
+      loginScreen.classList.remove('hide');
+      mainApp.classList.add('hide');
+      navBar.classList.add('hide');
     }
-    
-    async function addActivity(uid, text) {
-        try {
-            if (!db || !state.firebaseEnabled) return;
-            await addDoc(collection(db, 'users', String(uid), 'activities'), { text, ts: serverTimestamp() });
-        } catch (err) {
-            console.error("Activity log failed:", err);
-        }
+  });
+
+  // --- Event Listeners ---
+  signupBtn.addEventListener('click', async () => {
+    const email = loginEmailEl.value;
+    const password = loginPasswordEl.value;
+    authHint.textContent = 'Signing up...';
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Create a new document for the user in Firestore
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        name: email.split('@')[0], // Default name
+        email: user.email,
+        balance: 0,
+        referrals: 0,
+        tasksCompleted: [],
+        createdAt: serverTimestamp()
+      });
+      authHint.textContent = 'Signup successful! You are now logged in.';
+    } catch (error) {
+      authHint.textContent = error.message;
     }
+  });
 
-    async function handleTaskClaim(uid, taskId) {
-        const task = TASKS.find(t => t.id === taskId);
-        if (!task || task.repeatable) return;
-
-        try {
-            const userRef = doc(db, 'users', String(uid));
-            const userDoc = await getDoc(userRef);
-            if (!userDoc.exists()) return;
-            const completedTasks = userDoc.data().tasksCompleted || [];
-            if (completedTasks.includes(taskId)) {
-                showHint("Task already completed!");
-                return;
-            }
-            const newCompleted = [...completedTasks, taskId];
-            const newBalance = (userDoc.data().balance || 0) + task.reward;
-            await updateDoc(userRef, {
-                tasksCompleted: newCompleted,
-                balance: newBalance
-            });
-            await addActivity(uid, `Task '${task.title}' completed`);
-        } catch (err) {
-            console.error("Task claim failed:", err);
-            showHint("Failed to claim task.");
-        }
+  loginBtn.addEventListener('click', async () => {
+    const email = loginEmailEl.value;
+    const password = loginPasswordEl.value;
+    authHint.textContent = 'Logging in...';
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      authHint.textContent = '';
+    } catch (error) {
+      authHint.textContent = error.message;
     }
-    
-    async function loadWithdrawalHistory() {
-        if (!db || !state.firebaseEnabled) return;
-        
-        try {
-            const q = query(
-                collection(db, 'withdrawals'), 
-                where('userId', '==', state.userId),
-                orderBy('createdAt', 'desc')
-            );
-            
-            const querySnapshot = await getDocs(q);
-            const withdrawals = [];
-            
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                withdrawals.push({ 
-                    id: doc.id, 
-                    ...data,
-                    createdAt: data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'Unknown date'
-                });
-            });
-            
-            // Display withdrawals
-            els.wdList.innerHTML = withdrawals.map(wd => `
-                <li class="flex items-center justify-between p-3 rounded-xl bg-white/5">
-                    <div>
-                        <div class="font-medium">${wd.amount} coins</div>
-                        <div class="text-xs opacity-70">${wd.address}</div>
-                        <div class="text-xs opacity-50 mt-1">${wd.createdAt}</div>
-                    </div>
-                    <span class="text-xs font-semibold ${wd.status === 'completed' ? 'text-acc' : wd.status === 'rejected' ? 'text-red-400' : 'text-warn'}">${wd.status}</span>
-                </li>
-            `).join('');
-            
-            // Update completed count
-            const completedCount = withdrawals.filter(wd => wd.status === 'completed').length;
-            els.completedWdCount.textContent = completedCount;
-        } catch (err) {
-            console.error("Failed to load withdrawals:", err);
-        }
-    }
+  });
 
-    // New function to load all withdrawals for admin
-    async function loadAllWithdrawals() {
-        if (!db || !state.firebaseEnabled) return;
-        
-        try {
-            const q = query(
-                collection(db, 'withdrawals'),
-                orderBy('createdAt', 'desc')
-            );
-            
-            const querySnapshot = await getDocs(q);
-            const withdrawals = [];
-            let pendingCount = 0;
-            
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                withdrawals.push({ 
-                    id: doc.id, 
-                    ...data,
-                    createdAt: data.createdAt ? data.createdAt.toDate().toLocaleString() : 'Unknown date'
-                });
-                if (data.status === 'pending') pendingCount++;
-            });
-            
-            // Update counts
-            els.pendingWdCount.textContent = pendingCount;
-            els.allWdCount.textContent = withdrawals.length;
-            
-            // Display pending withdrawals
-            const pendingWithdrawals = withdrawals.filter(wd => wd.status === 'pending');
-            els.pendingWithdrawals.innerHTML = pendingWithdrawals.map(wd => `
-                <div class="admin-withdrawal-item p-3 rounded-xl bg-white/5">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="font-medium">${wd.userName || 'Unknown User'} (ID: ${wd.userId})</div>
-                            <div class="text-sm mt-1">Amount: <span class="font-semibold">${wd.amount} coins</span></div>
-                            <div class="text-sm">Address: ${wd.address}</div>
-                            <div class="text-xs opacity-50 mt-1">Requested: ${wd.createdAt}</div>
-                        </div>
-                        <div class="flex flex-col gap-2 ml-2">
-                            <button onclick="approveWithdrawal('${wd.id}', '${wd.userId}', ${wd.amount})" class="px-3 py-1 bg-acc text-black text-xs font-semibold rounded-lg hover:opacity-90">Approve</button>
-                            <button onclick="rejectWithdrawal('${wd.id}', '${wd.userId}', ${wd.amount})" class="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-lg hover:opacity-90">Reject</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Display all withdrawals
-            els.allWithdrawals.innerHTML = withdrawals.map(wd => `
-                <div class="admin-withdrawal-item ${wd.status} p-3 rounded-xl bg-white/5">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="font-medium">${wd.userName || 'Unknown User'} (ID: ${wd.userId})</div>
-                            <div class="text-sm mt-1">Amount: <span class="font-semibold">${wd.amount} coins</span></div>
-                            <div class="text-sm">Address: ${wd.address}</div>
-                            <div class="text-xs opacity-50 mt-1">Requested: ${wd.createdAt}</div>
-                        </div>
-                        <span class="text-xs font-semibold ${wd.status === 'completed' ? 'text-acc' : wd.status === 'rejected' ? 'text-red-400' : 'text-warn'} ml-2">${wd.status}</span>
-                    </div>
-                </div>
-            `).join('');
-            
-        } catch (err) {
-            console.error("Failed to load all withdrawals:", err);
-        }
-    }
-
-    // Function to approve a withdrawal
-    window.approveWithdrawal = async (withdrawalId, userId, amount) => {
-        if (!ADMIN_IDS.includes(state.userId)) {
-            showHint("Admin access required");
-            return;
-        }
-        
-        try {
-            const withdrawalRef = doc(db, 'withdrawals', withdrawalId);
-            await updateDoc(withdrawalRef, { 
-                status: 'completed',
-                processedAt: serverTimestamp(),
-                processedBy: state.userId
-            });
-            
-            showHint("Withdrawal approved successfully");
-            loadAllWithdrawals(); // Refresh the list
-        } catch (err) {
-            console.error("Approval failed:", err);
-            showHint("Failed to approve withdrawal");
-        }
-    };
-
-    // Function to reject a withdrawal
-    window.rejectWithdrawal = async (withdrawalId, userId, amount) => {
-        if (!ADMIN_IDS.includes(state.userId)) {
-            showHint("Admin access required");
-            return;
-        }
-        
-        try {
-            const withdrawalRef = doc(db, 'withdrawals', withdrawalId);
-            await updateDoc(withdrawalRef, { 
-                status: 'rejected',
-                processedAt: serverTimestamp(),
-                processedBy: state.userId
-            });
-            
-            // Refund the amount to user
-            await addBalance(userId, amount, 'Withdrawal refund (rejected)');
-            
-            showHint("Withdrawal rejected and amount refunded");
-            loadAllWithdrawals(); // Refresh the list
-        } catch (err) {
-            console.error("Rejection failed:", err);
-            showHint("Failed to reject withdrawal");
-        }
-    };
-    
-    // ================== 5. UI RENDERING & UPDATES ==================
-    function renderTasks(completed = []) {
-        if (!els.taskList) return;
-        els.taskList.innerHTML = TASKS.map(t => {
-            const isCompleted = !t.repeatable && completed.includes(t.id);
-            return `
-                <div class="flex items-center justify-between rounded-2xl bg-white/5 p-4">
-                    <div>
-                        <div class="font-semibold">${t.title}</div>
-                        <div class="text-xs opacity-70">Reward: +${t.reward} coins</div>
-                    </div>
-                    <button data-task-id="${t.id}" class="btn ${isCompleted ? 'bg-white/10 cursor-not-allowed opacity-60' : 'bg-acc text-black font-semibold'}">
-                        ${isCompleted ? 'Completed' : (t.id === 'watch_monetag_ad' ? 'Watch Ad' : 'Claim')}
-                    </button>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function updateProfileUI(data) {
-        els.pfName.textContent = data.name || 'User';
-        els.pfId.textContent = state.userId;
-        els.pfReferredBy.textContent = data.referredBy || '–';
-        els.pfRefCount.textContent = data.referrals || 0;
-        els.refCount.textContent = data.referrals || 0;
-        els.walletBalance.textContent = data.balance || 0;
-        els.walletRefs.textContent = data.referrals || 0;
-        els.refLink.value = `${location.origin}${location.pathname}?ref=${state.userId}`;
-        els.minWd.textContent = MIN_WITHDRAW;
-        renderTasks(data.tasksCompleted || []);
-    }
-
-    function showAdminIfAllowed() {
-        const isAdmin = ADMIN_IDS.includes(state.userId);
-        let adminBtn = document.getElementById('navAdminBtn');
-        if (isAdmin && !adminBtn) {
-            els.navGrid.classList.replace('grid-cols-3', 'grid-cols-4');
-            adminBtn = document.createElement('button');
-            adminBtn.id = 'navAdminBtn';
-            adminBtn.dataset.nav = 'admin';
-            adminBtn.className = 'btn font-semibold hover:bg-white/10';
-            adminBtn.textContent = 'Admin';
-            els.navGrid.appendChild(adminBtn);
-            bindNavEvents();
-        } else if (!isAdmin && adminBtn) {
-            adminBtn.remove();
-            els.navGrid.classList.replace('grid-cols-4', 'grid-cols-3');
-        }
-        if (els.adminHint) els.adminHint.textContent = isAdmin ? `UID: ${state.userId}` : '';
-    }
-    
-    // ================== 6. EVENT BINDING ==================
-    function bindNavEvents() {
-        const screens = Array.from(document.querySelectorAll('[data-screen]'));
-        document.querySelectorAll('nav [data-nav]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.dataset.nav;
-                screens.forEach(s => {
-                    s.classList.toggle('hide', s.dataset.screen !== tab);
-                    if (s.dataset.screen === tab) {
-                        s.classList.add('fade-in');
-                    }
-                });
-                document.querySelectorAll('nav [data-nav]').forEach(b => 
-                    b.classList.toggle('tab-active', b.dataset.nav === tab)
-                );
-                
-                // Load specific data when tab is shown
-                if (tab === 'wallet' && state.firebaseEnabled) {
-                    loadWithdrawalHistory();
-                } else if (tab === 'admin' && state.firebaseEnabled) {
-                    loadAllWithdrawals();
-                }
-            });
-        });
-    }
-
-    function bindAllActions() {
-        bindNavEvents();
-        document.querySelector('[data-nav="profile"]').click(); // Set initial tab
-
-        // Retry connection button
-        if (els.retryConnection) {
-            els.retryConnection.addEventListener('click', initFirebase);
-        }
-
-        // Profile Screen Buttons
-        els.dailyCheckInBtn.addEventListener('click', async () => {
-            if (!state.firebaseEnabled) {
-                showHint("Demo mode: Daily check-in simulated!");
-                const currentBalance = parseInt(els.walletBalance.textContent);
-                els.walletBalance.textContent = currentBalance + DAILY_REWARD;
-                return;
-            }
-            
-            try {
-                const userRef = doc(db, 'users', state.userId);
-                const userDoc = await getDoc(userRef);
-                
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    const lastCheckIn = userData.lastCheckIn ? userData.lastCheckIn.toDate() : null;
-                    const today = new Date();
-                    
-                    // Check if already checked in today
-                    if (lastCheckIn && lastCheckIn.toDateString() === today.toDateString()) {
-                        showHint("Already checked in today!");
-                        return;
-                    }
-                    
-                    await updateDoc(userRef, {
-                        balance: (userData.balance || 0) + DAILY_REWARD,
-                        lastCheckIn: serverTimestamp()
-                    });
-                    
-                    showHint(`Daily check-in successful! +${DAILY_REWARD} coins`);
-                }
-            } catch (err) {
-                console.error("Daily check-in failed:", err);
-                showHint("Failed to check in.");
-            }
-        });
-        
-        els.goToTasksBtn.addEventListener('click', () => document.querySelector('[data-nav="tasks"]').click());
-        
-        els.copyRef.addEventListener('click', async () => { 
-            try { 
-                await navigator.clipboard.writeText(els.refLink.value); 
-                showHint('Link copied!'); 
-            } catch { 
-                showHint('Failed to copy.'); 
-            } 
-        });
-        
-        els.shareRef.addEventListener('click', async () => {
-            const shareUrl = els.refLink.value;
-            const shareText = `Join PEPE BOT and earn coins! ${shareUrl}`;
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.shareLink(shareUrl, shareText);
-            } else if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'PEPE BOT',
-                        text: shareText,
-                        url: shareUrl
-                    });
-                } catch (err) {
-                    console.error('Share failed:', err);
-                    showHint('Share not available.');
-                }
-            } else {
-                showHint('Share not supported in this browser.');
-            }
-        });
-        
-        // Wallet Screen Buttons
-        els.showWithdrawForm.addEventListener('click', () => { 
-            els.walletOverview.classList.add('hide'); 
-            els.withdrawForm.classList.remove('hide'); 
-        });
-        
-        els.hideWithdrawForm.addEventListener('click', () => { 
-            els.walletOverview.classList.remove('hide'); 
-            els.withdrawForm.classList.add('hide'); 
-        });
-        
-        els.submitWithdraw.addEventListener('click', async () => {
-            if (!state.firebaseEnabled) {
-                showHint("Demo mode: Withdrawal simulation only!");
-                return;
-            }
-            
-            const amount = Number(els.wdAmount.value);
-            const address = els.wdAddress.value.trim();
-            
-            if (amount < MIN_WITHDRAW) {
-                showHint(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
-                return;
-            }
-            
-            if (!address) {
-                showHint("Please enter your Binance UID");
-                return;
-            }
-            
-            try {
-                const userRef = doc(db, 'users', state.userId);
-                const userDoc = await getDoc(userRef);
-                
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    
-                    if (userData.balance < amount) {
-                        showHint("Insufficient balance");
-                        return;
-                    }
-                    
-                    // Create withdrawal request with user info
-                    await addDoc(collection(db, 'withdrawals'), {
-                        userId: state.userId,
-                        userName: state.name,
-                        amount: amount,
-                        address: address,
-                        status: 'pending',
-                        createdAt: serverTimestamp()
-                    });
-                    
-                    // Deduct from balance
-                    await updateDoc(userRef, {
-                        balance: userData.balance - amount
-                    });
-                    
-                    showHint("Withdrawal request submitted!");
-                    els.wdAmount.value = '';
-                    els.wdAddress.value = '';
-                    els.walletOverview.classList.remove('hide');
-                    els.withdrawForm.classList.add('hide');
-                }
-            } catch (err) {
-                console.error("Withdrawal failed:", err);
-                showHint("Failed to process withdrawal");
-            }
-        });
-
-        // Task List (Event Delegation)
-        els.taskList.addEventListener('click', async (e) => {
-            const btn = e.target.closest('button[data-task-id]');
-            if (!btn || btn.classList.contains('cursor-not-allowed')) return;
-            const taskId = btn.getAttribute('data-task-id');
-            const task = TASKS.find(t => t.id === taskId);
-            
-            if (!state.firebaseEnabled) {
-                showHint("Demo mode: Task simulation only!");
-                if (task.url) window.open(task.url, '_blank');
-                return;
-            }
-            
-            if (taskId === 'watch_monetag_ad') {
-                try {
-                    if (typeof show_9735186 === 'function') {
-                        showHint('Loading ad...');
-                        show_9735186().then(() => {
-                            addBalance(state.userId, task.reward, 'Monetag Ad Reward');
-                            showHint(`+${task.reward} coins earned!`);
-                        }).catch(err => {
-                            console.error("Monetag Ad Error:", err);
-                            showHint('Ad not available right now.');
-                        });
-                    } else {
-                        throw new Error("Monetag function not found.");
-                    }
-                } catch(err) {
-                    console.error(err);
-                    showHint('Ad system failed to load.');
-                }
-            } else {
-                if (task.url) window.open(task.url, '_blank');
-                await handleTaskClaim(state.userId, taskId);
-            }
-        });
-
-        // Admin Panel Buttons
-        els.applySet.addEventListener('click', async () => {
-            if (!ADMIN_IDS.includes(state.userId)) {
-                showHint("Admin access required");
-                return;
-            }
-            
-            const newBalance = Number(els.setBalance.value);
-            if (isNaN(newBalance) || newBalance < 0) return;
-            
-            try {
-                const userRef = doc(db, 'users', state.userId);
-                await updateDoc(userRef, { balance: newBalance });
-                showHint(`Balance set to ${newBalance}`);
-            } catch (err) {
-                console.error("Set balance failed:", err);
-                showHint("Failed to set balance");
-            }
-        });
-        
-        els.applyAdjust.addEventListener('click', async () => {
-            if (!ADMIN_IDS.includes(state.userId)) {
-                showHint("Admin access required");
-                return;
-            }
-            
-            const adjustment = Number(els.adjustBalance.value);
-            if (isNaN(adjustment)) return;
-            
-            try {
-                await addBalance(state.userId, adjustment, 'Admin adjustment');
-                showHint(`Balance adjusted by ${adjustment}`);
-            } catch (err) {
-                console.error("Adjust balance failed:", err);
-                showHint("Failed to adjust balance");
-            }
-        });
-        
-        els.resetUser.addEventListener('click', async () => {
-            if (!ADMIN_IDS.includes(state.userId)) {
-                showHint("Admin access required");
-                return;
-            }
-            
-            if (!confirm("Are you sure you want to reset this user?")) return;
-            
-            try {
-                const userRef = doc(db, 'users', state.userId);
-                await setDoc(userRef, {
-                    name: state.name,
-                    balance: 0,
-                    createdAt: serverTimestamp(),
-                    referrals: 0,
-                    tasksCompleted: [],
-                    lastCheckIn: null
-                });
-                showHint("User data reset");
-            } catch (err) {
-                console.error("Reset user failed:", err);
-                showHint("Failed to reset user");
-            }
-        });
-        
-        els.exportData.addEventListener('click', async () => {
-            if (!ADMIN_IDS.includes(state.userId)) {
-                showHint("Admin access required");
-                return;
-            }
-            
-            try {
-                const userRef = doc(db, 'users', state.userId);
-                const userDoc = await getDoc(userRef);
-                
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `user-${state.userId}-data.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
-            } catch (err) {
-                console.error("Export failed:", err);
-                showHint("Failed to export data");
-            }
-        });
-    }
-
-    // ================== 7. FIREBASE INITIALIZATION ==================
-    async function initFirebase() {
-        try {
-            // Initialize Firebase
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            state.firebaseEnabled = true;
-            hideFirebaseError();
-
-            const userRef = doc(db, 'users', state.userId);
-            let userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                // Check for referral
-                const urlParams = new URLSearchParams(window.location.search);
-                const refId = urlParams.get('ref');
-                
-                await setDoc(userRef, {
-                    name: state.name, 
-                    balance: 0, 
-                    createdAt: serverTimestamp(), 
-                    referrals: 0,
-                    tasksCompleted: [],
-                    referredBy: refId || null,
-                    lastCheckIn: null
-                });
-                
-                // Add referral bonus if applicable
-                if (refId && refId !== state.userId) {
-                    try {
-                        const refUserRef = doc(db, 'users', refId);
-                        const refUserDoc = await getDoc(refUserRef);
-                        
-                        if (refUserDoc.exists()) {
-                            const refData = refUserDoc.data();
-                            await updateDoc(refUserRef, {
-                                referrals: (refData.referrals || 0) + 1,
-                                balance: (refData.balance || 0) + REFERRAL_BONUS
-                            });
-                            
-                            await addActivity(refId, `Referral bonus from ${state.name}`);
-                        }
-                    } catch (err) {
-                        console.error("Referral bonus failed:", err);
-                    }
-                }
-            }
-            
-            // Set up real-time listener
-            onSnapshot(userRef, (doc) => {
-                if (doc.exists()) {
-                    updateProfileUI(doc.data());
-                    showAdminIfAllowed();
-                }
-            });
-
-        } catch (err) {
-            console.error("Firebase Initialization Failed:", err);
-            showFirebaseError("Could not connect to database. Click Retry to try again.");
-            state.firebaseEnabled = false;
-        }
-    }
-
-    // ================== 8. MAIN INITIALIZATION ==================
-    async function init() {
-        els.year.textContent = new Date().getFullYear();
-        bindAllActions();
-
-        const tg = window.Telegram && window.Telegram.WebApp;
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
-            tg.ready();
-            tg.expand();
-            const user = tg.initDataUnsafe.user;
-            state.userId = String(user.id);
-            state.name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'User';
-            
-            // Try to initialize Firebase
-            await initFirebase();
-
-        } else {
-            // Development mode (not in Telegram)
-            els.devFallback.classList.remove('hidden');
-            els.mockStart.addEventListener('click', () => {
-                const mockName = els.mockName.value.trim();
-                if (!mockName) {
-                    showHint("Please enter a name");
-                    return;
-                }
-                
-                state.userId = 'dev-' + Date.now();
-                state.name = mockName;
-                
-                // Hide fallback UI
-                els.devFallback.classList.add('hidden');
-                
-                // Initialize with mock data
-                updateProfileUI({
-                    name: mockName,
-                    balance: 100,
-                    referrals: 0,
-                    tasksCompleted: [],
-                    referredBy: null
-                });
-                
-                showHint("Demo mode activated!");
-            });
-        }
-    }
-
-    init(); // Start the application
-  </script>
-
+  logoutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+  });
+</script>
 </body>
 </html>
