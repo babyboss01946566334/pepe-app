@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PEPE BOT — Telegram Mini App</title>
+  <title>PEPE PARODY</title>
 
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -50,6 +50,13 @@
         border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-align: center;
         margin-top: 0.5rem; transition: opacity 0.3s ease-in-out;
     }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body class="min-h-dvh text-white bg-gradient-to-b from-bg1 to-bg2">
@@ -64,14 +71,14 @@
             <img src="https://www.svgrepo.com/show/473727/pepe-coin.svg" alt="PEPE Coin" class="h-full w-full object-cover">
         </div>
         <div>
-          <h1 id="mainHeader" class="text-2xl font-bold tracking-tight">PEPE BOT</h1>
-          <p class="text-xs text-white/70">Telegram Mini App</p>
+          <h1 id="mainHeader" class="text-2xl font-bold tracking-tight">PEPE PARODY</h1>
+          <p class="text-xs text-white/70">-</p>
         </div>
       </div>
     </header>
 
     <!-- PROFILE SCREEN -->
-    <section data-screen="profile" class="space-y-4">
+    <section data-screen="profile" class="space-y-4 fade-in">
       <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
         <h3 class="font-semibold mb-2">Profile Details</h3>
         <div class="mt-2 grid sm:grid-cols-2 gap-3">
@@ -111,7 +118,7 @@
     </section>
 
     <!-- TASKS SCREEN -->
-    <section data-screen="tasks" class="space-y-4 hide">
+    <section data-screen="tasks" class="space-y-4 hide fade-in">
       <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
         <h3 class="font-semibold mb-2">Tasks</h3>
         <p class="text-xs text-white/70">Complete tasks to earn coins. Some tasks are repeatable.</p>
@@ -120,7 +127,7 @@
     </section>
 
     <!-- WALLET SCREEN -->
-    <section data-screen="wallet" class="space-y-4 hide">
+    <section data-screen="wallet" class="space-y-4 hide fade-in">
       <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
         <div id="walletOverview">
             <h3 class="font-semibold mb-2">Wallet Overview</h3>
@@ -151,7 +158,7 @@
     </section>
 
     <!-- ADMIN SCREEN -->
-    <section data-screen="admin" class="space-y-4 hide">
+    <section data-screen="admin" class="space-y-4 hide fade-in">
       <div id="adminPanel" class="glass rounded-3xl border border-white/10 p-5 bg-black/40 shadow-soft">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold">Admin Panel</h3>
@@ -176,13 +183,12 @@
       <button data-nav="wallet" class="btn font-semibold hover:bg-white/10">Wallet</button>
     </div>
   </nav>
-
-  <script type="module">
+    <script type="module">
     // --- Firebase Imports ---
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-      runTransaction, collection, addDoc, query, orderBy, onSnapshot
+      runTransaction, collection, addDoc, query, orderBy, onSnapshot, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js';
 
     // ================== 1. CONFIGURATION ==================
@@ -195,9 +201,9 @@
       appId: "1:307051092104:web:0649d26ebe30d61e63e73d"
     };
 
-    const REFERRAL_BONUS = 20;
-    const DAILY_REWARD = 10;
-    const MIN_WITHDRAW = 100;
+    const REFERRAL_BONUS = 200;
+    const DAILY_REWARD = 50;
+    const MIN_WITHDRAW = 10000;
     const ADMIN_IDS = ["5481629779,5146589219"];
 
     const TASKS = [
@@ -208,7 +214,8 @@
     ];
     
     // ================== 2. GLOBAL STATE & ELEMENTS ==================
-    const state = { userId: null, name: 'User' };
+    const state = { userId: null, name: 'User', firebaseEnabled: false };
+    let app, db; // Firebase instances
     const els = {};
     const elIds = [
         'mainHeader', 'navGrid', 'firebaseBanner', 'devFallback', 'mockName', 'mockStart', 'year', 'refLink', 'copyRef', 
@@ -219,8 +226,7 @@
         'dailyCheckInBtn', 'goToTasksBtn'
     ];
     elIds.forEach(id => els[id] = document.getElementById(id));
-    let db; // Firebase database instance
-
+    
     // ================== 3. HELPER FUNCTIONS ==================
     const showHint = (message) => {
         if (!els.wdHint) return;
@@ -230,6 +236,16 @@
     };
     
     const isPermissionDenied = (err) => String(err.message || err).toLowerCase().includes('permission');
+    
+    const switchToLocal = (message) => {
+        if (els.firebaseBanner) {
+            els.firebaseBanner.textContent = message;
+            els.firebaseBanner.classList.remove('hide');
+        }
+        state.firebaseEnabled = false;
+    };
+    
+    const isAdmin = () => ADMIN_IDS.includes(state.userId);
 
     // ================== 4. CORE LOGIC (Database, Tasks, etc.) ==================
     async function addBalance(uid, delta, reason) {
@@ -251,7 +267,7 @@
     
     async function addActivity(uid, text) {
         try {
-            if (!db) return;
+            if (!db || !state.firebaseEnabled) return;
             await addDoc(collection(db, 'users', String(uid), 'activities'), { text, ts: serverTimestamp() });
         } catch (err) {
             console.error("Activity log failed:", err);
@@ -284,6 +300,48 @@
         }
     }
     
+    async function loadWithdrawalHistory() {
+        if (!db || !state.firebaseEnabled) return;
+        
+        try {
+            const q = query(
+                collection(db, 'withdrawals'), 
+                where('userId', '==', state.userId),
+                orderBy('createdAt', 'desc')
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const withdrawals = [];
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                withdrawals.push({ 
+                    id: doc.id, 
+                    ...data,
+                    createdAt: data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'Unknown date'
+                });
+            });
+            
+            // Display withdrawals
+            els.wdList.innerHTML = withdrawals.map(wd => `
+                <li class="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                    <div>
+                        <div class="font-medium">${wd.amount} coins</div>
+                        <div class="text-xs opacity-70">${wd.address}</div>
+                        <div class="text-xs opacity-50 mt-1">${wd.createdAt}</div>
+                    </div>
+                    <span class="text-xs font-semibold ${wd.status === 'completed' ? 'text-acc' : wd.status === 'rejected' ? 'text-red-400' : 'text-warn'}">${wd.status}</span>
+                </li>
+            `).join('');
+            
+            // Update completed count
+            const completedCount = withdrawals.filter(wd => wd.status === 'completed').length;
+            els.completedWdCount.textContent = completedCount;
+        } catch (err) {
+            console.error("Failed to load withdrawals:", err);
+        }
+    }
+    
     // ================== 5. UI RENDERING & UPDATES ==================
     function renderTasks(completed = []) {
         if (!els.taskList) return;
@@ -296,7 +354,7 @@
                         <div class="text-xs opacity-70">Reward: +${t.reward} coins</div>
                     </div>
                     <button data-task-id="${t.id}" class="btn ${isCompleted ? 'bg-white/10 cursor-not-allowed opacity-60' : 'bg-acc text-black font-semibold'}">
-                        ${isCompleted ? 'Completed' : 'Claim'}
+                        ${isCompleted ? 'Completed' : (t.id === 'watch_monetag_ad' ? 'Watch Ad' : 'Claim')}
                     </button>
                 </div>
             `;
@@ -312,6 +370,7 @@
         els.walletBalance.textContent = data.balance || 0;
         els.walletRefs.textContent = data.referrals || 0;
         els.refLink.value = `${location.origin}${location.pathname}?ref=${state.userId}`;
+        els.minWd.textContent = MIN_WITHDRAW;
         renderTasks(data.tasksCompleted || []);
     }
 
@@ -338,12 +397,22 @@
     function bindNavEvents() {
         const screens = Array.from(document.querySelectorAll('[data-screen]'));
         document.querySelectorAll('nav [data-nav]').forEach(btn => {
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', () => {
-                const tab = newBtn.dataset.nav;
-                screens.forEach(s => s.classList.toggle('hide', s.dataset.screen !== tab));
-                document.querySelectorAll('nav [data-nav]').forEach(b => b.classList.toggle('tab-active', b.dataset.nav === tab));
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.nav;
+                screens.forEach(s => {
+                    s.classList.toggle('hide', s.dataset.screen !== tab);
+                    if (s.dataset.screen === tab) {
+                        s.classList.add('fade-in');
+                    }
+                });
+                document.querySelectorAll('nav [data-nav]').forEach(b => 
+                    b.classList.toggle('tab-active', b.dataset.nav === tab)
+                );
+                
+                // Load specific data when tab is shown
+                if (tab === 'wallet' && state.firebaseEnabled) {
+                    loadWithdrawalHistory();
+                }
             });
         });
     }
@@ -353,15 +422,142 @@
         document.querySelector('[data-nav="profile"]').click(); // Set initial tab
 
         // Profile Screen Buttons
-        els.dailyCheckInBtn.addEventListener('click', async () => { /* Daily check-in logic to be implemented */ showHint("Daily Check-in Clicked!"); });
+        els.dailyCheckInBtn.addEventListener('click', async () => {
+            if (!state.firebaseEnabled) {
+                showHint("Demo mode: Daily check-in simulated!");
+                const currentBalance = parseInt(els.walletBalance.textContent);
+                els.walletBalance.textContent = currentBalance + DAILY_REWARD;
+                return;
+            }
+            
+            try {
+                const userRef = doc(db, 'users', state.userId);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const lastCheckIn = userData.lastCheckIn ? userData.lastCheckIn.toDate() : null;
+                    const today = new Date();
+                    
+                    // Check if already checked in today
+                    if (lastCheckIn && lastCheckIn.toDateString() === today.toDateString()) {
+                        showHint("Already checked in today!");
+                        return;
+                    }
+                    
+                    await updateDoc(userRef, {
+                        balance: (userData.balance || 0) + DAILY_REWARD,
+                        lastCheckIn: serverTimestamp()
+                    });
+                    
+                    showHint(`Daily check-in successful! +${DAILY_REWARD} coins`);
+                }
+            } catch (err) {
+                console.error("Daily check-in failed:", err);
+                showHint("Failed to check in.");
+            }
+        });
+        
         els.goToTasksBtn.addEventListener('click', () => document.querySelector('[data-nav="tasks"]').click());
-        els.copyRef.addEventListener('click', async () => { try { await navigator.clipboard.writeText(els.refLink.value); showHint('Link copied!'); } catch { showHint('Failed to copy.'); } });
-        els.shareRef.addEventListener('click', async () => { /* Share logic */ showHint("Share Clicked!"); });
+        
+        els.copyRef.addEventListener('click', async () => { 
+            try { 
+                await navigator.clipboard.writeText(els.refLink.value); 
+                showHint('Link copied!'); 
+            } catch { 
+                showHint('Failed to copy.'); 
+            } 
+        });
+        
+        els.shareRef.addEventListener('click', async () => {
+            const shareUrl = els.refLink.value;
+            const shareText = `Join PEPE BOT and earn coins! ${shareUrl}`;
+            
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.shareLink(shareUrl, shareText);
+            } else if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'PEPE BOT',
+                        text: shareText,
+                        url: shareUrl
+                    });
+                } catch (err) {
+                    console.error('Share failed:', err);
+                    showHint('Share not available.');
+                }
+            } else {
+                showHint('Share not supported in this browser.');
+            }
+        });
         
         // Wallet Screen Buttons
-        els.showWithdrawForm.addEventListener('click', () => { els.walletOverview.classList.add('hide'); els.withdrawForm.classList.remove('hide'); });
-        els.hideWithdrawForm.addEventListener('click', () => { els.walletOverview.classList.remove('hide'); els.withdrawForm.classList.add('hide'); });
-        els.submitWithdraw.addEventListener('click', () => { /* Withdraw logic */ });
+        els.showWithdrawForm.addEventListener('click', () => { 
+            els.walletOverview.classList.add('hide'); 
+            els.withdrawForm.classList.remove('hide'); 
+        });
+        
+        els.hideWithdrawForm.addEventListener('click', () => { 
+            els.walletOverview.classList.remove('hide'); 
+            els.withdrawForm.classList.add('hide'); 
+        });
+        
+        els.submitWithdraw.addEventListener('click', async () => {
+            if (!state.firebaseEnabled) {
+                showHint("Demo mode: Withdrawal simulation only!");
+                return;
+            }
+            
+            const amount = Number(els.wdAmount.value);
+            const address = els.wdAddress.value.trim();
+            
+            if (amount < MIN_WITHDRAW) {
+                showHint(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
+                return;
+            }
+            
+            if (!address) {
+                showHint("Please enter your Binance UID");
+                return;
+            }
+            
+            try {
+                const userRef = doc(db, 'users', state.userId);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    if (userData.balance < amount) {
+                        showHint("Insufficient balance");
+                        return;
+                    }
+                    
+                    // Create withdrawal request
+                    await addDoc(collection(db, 'withdrawals'), {
+                        userId: state.userId,
+                        amount: amount,
+                        address: address,
+                        status: 'pending',
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    // Deduct from balance
+                    await updateDoc(userRef, {
+                        balance: userData.balance - amount
+                    });
+                    
+                    showHint("Withdrawal request submitted!");
+                    els.wdAmount.value = '';
+                    els.wdAddress.value = '';
+                    els.walletOverview.classList.remove('hide');
+                    els.withdrawForm.classList.add('hide');
+                }
+            } catch (err) {
+                console.error("Withdrawal failed:", err);
+                showHint("Failed to process withdrawal");
+            }
+        });
 
         // Task List (Event Delegation)
         els.taskList.addEventListener('click', async (e) => {
@@ -369,6 +565,12 @@
             if (!btn || btn.classList.contains('cursor-not-allowed')) return;
             const taskId = btn.getAttribute('data-task-id');
             const task = TASKS.find(t => t.id === taskId);
+            
+            if (!state.firebaseEnabled) {
+                showHint("Demo mode: Task simulation only!");
+                if (task.url) window.open(task.url, '_blank');
+                return;
+            }
             
             if (taskId === 'watch_monetag_ad') {
                 try {
@@ -395,10 +597,94 @@
         });
 
         // Admin Panel Buttons
-        els.applySet.addEventListener('click', async () => { /* Admin logic */ });
-        els.applyAdjust.addEventListener('click', async () => { /* Admin logic */ });
-        els.resetUser.addEventListener('click', async () => { /* Admin logic */ });
-        els.exportData.addEventListener('click', async () => { /* Admin logic */ });
+        els.applySet.addEventListener('click', async () => {
+            if (!isAdmin()) {
+                showHint("Admin access required");
+                return;
+            }
+            
+            const newBalance = Number(els.setBalance.value);
+            if (isNaN(newBalance) || newBalance < 0) return;
+            
+            try {
+                const userRef = doc(db, 'users', state.userId);
+                await updateDoc(userRef, { balance: newBalance });
+                showHint(`Balance set to ${newBalance}`);
+            } catch (err) {
+                console.error("Set balance failed:", err);
+                showHint("Failed to set balance");
+            }
+        });
+        
+        els.applyAdjust.addEventListener('click', async () => {
+            if (!isAdmin()) {
+                showHint("Admin access required");
+                return;
+            }
+            
+            const adjustment = Number(els.adjustBalance.value);
+            if (isNaN(adjustment)) return;
+            
+            try {
+                await addBalance(state.userId, adjustment, 'Admin adjustment');
+                showHint(`Balance adjusted by ${adjustment}`);
+            } catch (err) {
+                console.error("Adjust balance failed:", err);
+                showHint("Failed to adjust balance");
+            }
+        });
+        
+        els.resetUser.addEventListener('click', async () => {
+            if (!isAdmin()) {
+                showHint("Admin access required");
+                return;
+            }
+            
+            if (!confirm("Are you sure you want to reset this user?")) return;
+            
+            try {
+                const userRef = doc(db, 'users', state.userId);
+                await setDoc(userRef, {
+                    name: state.name,
+                    balance: 0,
+                    createdAt: serverTimestamp(),
+                    referrals: 0,
+                    tasksCompleted: [],
+                    lastCheckIn: null
+                });
+                showHint("User data reset");
+            } catch (err) {
+                console.error("Reset user failed:", err);
+                showHint("Failed to reset user");
+            }
+        });
+        
+        els.exportData.addEventListener('click', async () => {
+            if (!isAdmin()) {
+                showHint("Admin access required");
+                return;
+            }
+            
+            try {
+                const userRef = doc(db, 'users', state.userId);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `user-${state.userId}-data.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            } catch (err) {
+                console.error("Export failed:", err);
+                showHint("Failed to export data");
+            }
+        });
     }
 
     // ================== 7. INITIALIZATION ==================
@@ -409,6 +695,7 @@
         const tg = window.Telegram && window.Telegram.WebApp;
         if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
             tg.ready();
+            tg.expand();
             const user = tg.initDataUnsafe.user;
             state.userId = String(user.id);
             state.name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'User';
@@ -422,10 +709,39 @@
                 let userSnap = await getDoc(userRef);
 
                 if (!userSnap.exists()) {
+                    // Check for referral
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const refId = urlParams.get('ref');
+                    
                     await setDoc(userRef, {
-                        name: state.name, balance: 0, createdAt: serverTimestamp(), referrals: 0,
-                        tasksCompleted: []
+                        name: state.name, 
+                        balance: 0, 
+                        createdAt: serverTimestamp(), 
+                        referrals: 0,
+                        tasksCompleted: [],
+                        referredBy: refId || null,
+                        lastCheckIn: null
                     });
+                    
+                    // Add referral bonus if applicable
+                    if (refId && refId !== state.userId) {
+                        try {
+                            const refUserRef = doc(db, 'users', refId);
+                            const refUserDoc = await getDoc(refUserRef);
+                            
+                            if (refUserDoc.exists()) {
+                                const refData = refUserDoc.data();
+                                await updateDoc(refUserRef, {
+                                    referrals: (refData.referrals || 0) + 1,
+                                    balance: (refData.balance || 0) + REFERRAL_BONUS
+                                });
+                                
+                                await addActivity(refId, `Referral bonus from ${state.name}`);
+                            }
+                        } catch (err) {
+                            console.error("Referral bonus failed:", err);
+                        }
+                    }
                 }
                 
                 onSnapshot(userRef, (doc) => {
@@ -441,8 +757,32 @@
             }
 
         } else {
+            // Development mode (not in Telegram)
             els.devFallback.classList.remove('hidden');
-            els.mockStart.addEventListener('click', () => { /* Fallback logic */ });
+            els.mockStart.addEventListener('click', () => {
+                const mockName = els.mockName.value.trim();
+                if (!mockName) {
+                    showHint("Please enter a name");
+                    return;
+                }
+                
+                state.userId = 'dev-' + Date.now();
+                state.name = mockName;
+                
+                // Hide fallback UI
+                els.devFallback.classList.add('hidden');
+                
+                // Initialize with mock data
+                updateProfileUI({
+                    name: mockName,
+                    balance: 100,
+                    referrals: 0,
+                    tasksCompleted: [],
+                    referredBy: null
+                });
+                
+                showHint("Demo mode activated!");
+            });
         }
     }
 
