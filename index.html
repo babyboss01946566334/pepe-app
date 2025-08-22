@@ -1,26 +1,35 @@
-<!-- USER_APP.HTML -->
+<!-- FINAL USER_APP.HTML with Monetag Integration -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PEPE PARODY</title>
-  <!-- Tailwind, Firebase, and Styles -->
+  <title>PEPE APP</title>
+
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9735186' data-sdk='show_9735186'></script>
+
+  <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDKs -->
   <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
   <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"></script>
   <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
+
   <style>
-    .glass{backdrop-filter: blur(10px)} .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:1rem; cursor: pointer;} .tab-active{background:rgba(255,255,255,.12)} .hide{display:none} input:focus { border-color: #22c55e; outline: none; }
+    .glass{backdrop-filter: blur(10px)} .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:1rem; cursor: pointer; transition: opacity 0.2s;} .btn:active{opacity:0.8} .tab-active{background:rgba(255,255,255,.12)} .hide{display:none} input:focus { border-color: #22c55e; outline: none; }
+    .hint-popup { background-color: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-align: center; margin-top: 0.5rem; transition: opacity 0.3s ease-in-out; }
+    .hint-popup.error { background-color: rgba(249, 115, 22, 0.2); color: #f97316; }
   </style>
 </head>
 <body class="min-h-dvh text-white bg-gradient-to-b from-[#0b1220] to-[#0e1624]">
 <div class="relative mx-auto max-w-3xl p-4 sm:p-6 pb-24 space-y-4">
 
     <!-- LOGIN/SIGNUP SCREEN -->
-    <section data-screen="login" class="space-y-4">
-      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft text-center">
-        <h2 class="text-2xl font-bold mb-4">Welcome to PEPE PARODY</h2>
+    <section data-screen="auth" class="space-y-4">
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-black/20 shadow-soft text-center">
+        <h2 class="text-2xl font-bold mb-4">Welcome to PEPE App</h2>
         <div class="space-y-3">
           <input id="loginEmail" type="email" placeholder="Enter your email" class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-white">
           <input id="loginPassword" type="password" placeholder="Enter your password" class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-white">
@@ -29,38 +38,57 @@
           <button id="loginBtn" class="btn flex-1 bg-acc text-black font-semibold">Login</button>
           <button id="signupBtn" class="btn flex-1 bg-acc2 text-black font-semibold">Sign Up</button>
         </div>
-        <p id="authHint" class="text-xs text-orange-400 mt-3 h-4"></p>
+        <p id="authHint" class="text-xs mt-3 h-4"></p>
       </div>
     </section>
 
-    <!-- MAIN APP SCREENS (Profile, Tasks, Wallet) -->
+    <!-- MAIN APP CONTAINER -->
     <main id="mainApp" class="hide space-y-4">
-      <!-- Top Bar with Logout -->
       <header class="flex items-center justify-between glass rounded-b-2xl border-b border-white/10 p-4 shadow-lg">
         <div class="flex items-center gap-3">
             <div class="h-11 w-11 rounded-2xl bg-acc grid place-items-center text-black font-extrabold shadow-soft overflow-hidden"><img src="https://www.svgrepo.com/show/473727/pepe-coin.svg" alt="PEPE Coin" class="h-full w-full object-cover"></div>
-            <div><h1 class="text-2xl font-bold tracking-tight">PEPE PARODY</h1><p class="text-xs text-white/70" id="userEmailDisplay"></p></div>
+            <div><h1 class="text-2xl font-bold tracking-tight">PEPE APP</h1><p class="text-xs text-white/70" id="userEmailDisplay"></p></div>
         </div>
         <button id="logoutBtn" class="btn bg-white/10 text-xs">Logout</button>
       </header>
 
       <!-- Profile Screen -->
       <section data-screen="profile" class="space-y-4">
-        <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <div class="glass rounded-3xl border border-white/10 p-5 bg-black/20 shadow-soft">
           <h3 class="font-semibold mb-2">Profile Details</h3>
           <div class="mt-2 grid sm:grid-cols-2 gap-3">
-            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Name</div><div id="pfName" class="text-lg font-semibold">User</div></div>
-            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">User ID</div><div id="pfId" class="text-lg font-semibold break-all">–</div></div>
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Balance</div><div id="pfBalance" class="text-lg font-semibold">0</div></div>
+            <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">User ID</div><div id="pfId" class="text-lg font-semibold break-all text-xs">–</div></div>
             <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Referred By</div><div id="pfReferredBy" class="text-lg font-semibold">–</div></div>
             <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Total Referrals</div><div id="pfRefCount" class="text-lg font-semibold">0</div></div>
           </div>
         </div>
-        <!-- Other sections like Tasks and Wallet need to be added here -->
       </section>
+      
+      <!-- Tasks Screen -->
+      <section data-screen="tasks" class="space-y-4 hide">
+        <div class="glass rounded-3xl border border-white/10 p-5 bg-black/20 shadow-soft">
+            <h3 class="font-semibold mb-2">Tasks</h3>
+            <p class="text-xs text-white/70">Complete tasks to earn coins.</p>
+            <div id="taskList" class="mt-3 grid gap-3"></div>
+        </div>
+      </section>
+
+      <!-- Wallet Screen -->
+      <section data-screen="wallet" class="space-y-4 hide">
+         <div class="glass rounded-3xl border border-white/10 p-5 bg-black/20 shadow-soft">
+            <h3 class="font-semibold mb-2">Wallet</h3>
+            <div class="rounded-2xl bg-white/5 p-4 text-center">
+                <div class="text-sm opacity-70">Current Balance</div>
+                <div id="walletBalance" class="text-4xl font-black">0</div>
+            </div>
+         </div>
+      </section>
+
     </main>
 
     <!-- Bottom Nav -->
-    <nav id="navBar" class="fixed bottom-0 inset-x-0 mx-auto max-w-3xl bg-white/5 backdrop-blur border-t border-white/10 p-2 rounded-t-2xl shadow-lg hide">
+    <nav id="navBar" class="fixed bottom-0 inset-x-0 mx-auto max-w-3xl bg-black/20 backdrop-blur border-t border-white/10 p-2 rounded-t-2xl shadow-lg hide">
       <div id="navGrid" class="grid grid-cols-3 gap-2">
         <button data-nav="profile" class="btn tab-active font-semibold">Profile</button>
         <button data-nav="tasks" class="btn font-semibold">Tasks</button>
@@ -73,11 +101,11 @@
   // --- Firebase Imports ---
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-  // --- Config ---
+  // --- 1. CONFIGURATION ---
   const firebaseConfig = {
-    apiKey: "AIzaSyBAXVxTPaiP8uFoQH5jEG2oUovvrrXbJDo",
+    apiKey: "AIzaSyBAXVxTPaiP8UoFQH5jEG2oUovvrrXbJDo",
     authDomain: "pepe-earning-app.firebaseapp.com",
     projectId: "pepe-earning-app",
     storageBucket: "pepe-earning-app.firebasestorage.app",
@@ -85,96 +113,167 @@
     appId: "1:307051092104:web:0649d26ebe30d61e63e73d"
   };
 
-  // --- Initialize Firebase ---
+  const TASKS = [
+    { id: 'watch_monetag_ad', title: 'Watch Ad & Earn', reward: 50, repeatable: true },
+    { id:'join_channel', title:'Join Telegram Channel', reward: 25, url: 'https://t.me/example_pepe_channel' },
+  ];
+
+  // --- 2. INITIALIZATION ---
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // --- Element Selectors ---
-  const loginScreen = document.querySelector('[data-screen="login"]');
+  // --- 3. ELEMENT SELECTORS ---
+  const screens = document.querySelectorAll('[data-screen]');
   const mainApp = document.getElementById('mainApp');
   const navBar = document.getElementById('navBar');
-  const loginEmailEl = document.getElementById('loginEmail');
-  const loginPasswordEl = document.getElementById('loginPassword');
-  const loginBtn = document.getElementById('loginBtn');
-  const signupBtn = document.getElementById('signupBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
   const authHint = document.getElementById('authHint');
-  const pfNameEl = document.getElementById('pfName');
-  const pfIdEl = document.getElementById('pfId');
-  const userEmailDisplayEl = document.getElementById('userEmailDisplay');
 
-  // --- Auth State Management ---
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      // User is logged in
-      loginScreen.classList.add('hide');
-      mainApp.classList.remove('hide');
-      navBar.classList.remove('hide');
-      
-      userEmailDisplayEl.textContent = user.email;
-      pfIdEl.textContent = user.uid;
-      
-      // Listen for real-time updates to user data
-      const userRef = doc(db, "users", user.uid);
-      onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          const data = doc.data();
-          pfNameEl.textContent = data.name || 'User';
-          // Update other UI elements (balance, referrals, etc.) here
-          // Example:
-          // document.getElementById('walletBalance').textContent = data.balance || 0;
+  // --- 4. HELPER FUNCTIONS ---
+  const showHint = (message, isError = false) => {
+    authHint.textContent = message;
+    authHint.classList.toggle('error', isError);
+    authHint.classList.toggle('success', !isError);
+  };
+
+  const navigate = (targetScreen) => {
+    screens.forEach(screen => screen.classList.toggle('hide', screen.dataset.screen !== targetScreen));
+    document.querySelectorAll('#navGrid [data-nav]').forEach(btn => {
+        btn.classList.toggle('tab-active', btn.dataset.nav === targetScreen);
+    });
+  };
+
+  // --- 5. CORE FUNCTIONS ---
+  const addBalance = async (uid, amount, reason) => {
+    try {
+        const userRef = doc(db, "users", uid);
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists()) throw "Document does not exist!";
+            const newBalance = (userDoc.data().balance || 0) + amount;
+            transaction.update(userRef, { balance: newBalance });
+        });
+        console.log(`${reason}: +${amount} coins for ${uid}`);
+    } catch (error) {
+        console.error("Failed to add balance: ", error);
+        showHint("Could not update balance.", true);
+    }
+  };
+
+  const renderTasks = (completedTasks = []) => {
+      const taskList = document.getElementById('taskList');
+      if (!taskList) return;
+      taskList.innerHTML = TASKS.map(task => {
+          const isCompleted = !task.repeatable && completedTasks.includes(task.id);
+          return `
+              <div class="flex items-center justify-between rounded-2xl bg-white/5 p-4">
+                  <div>
+                      <div class="font-semibold">${task.title}</div>
+                      <div class="text-xs opacity-70">Reward: +${task.reward} coins</div>
+                  </div>
+                  <button data-task-id="${task.id}" class="btn ${isCompleted ? 'bg-white/10 cursor-not-allowed opacity-60' : 'bg-acc text-black font-semibold'}">
+                      ${isCompleted ? 'Completed' : 'Claim'}
+                  </button>
+              </div>
+          `;
+      }).join('');
+  };
+
+  const updateUI = (userData) => {
+      document.getElementById('pfName').textContent = userData.name || 'User';
+      document.getElementById('pfBalance').textContent = userData.balance || 0;
+      document.getElementById('walletBalance').textContent = userData.balance || 0;
+      document.getElementById('pfId').textContent = auth.currentUser.uid;
+      document.getElementById('userEmailDisplay').textContent = auth.currentUser.email;
+      renderTasks(userData.tasksCompleted);
+  };
+  
+  // --- 6. EVENT BINDING ---
+  const bindEvents = () => {
+    // Auth Buttons
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        showHint('Signing up...');
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, "users", cred.user.uid), {
+                name: email.split('@')[0], email: email, balance: 0,
+                tasksCompleted: [], createdAt: serverTimestamp()
+            });
+            showHint('Signup successful!', false);
+        } catch (error) {
+            showHint(error.code, true);
         }
-      });
+    });
 
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        showHint('Logging in...');
+        try {
+            await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+            showHint(''); // Clear hint on success
+        } catch (error) {
+            showHint(error.code, true);
+        }
+    });
+    
+    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+    // Navigation
+    document.getElementById('navGrid').addEventListener('click', (e) => {
+        if (e.target.closest('[data-nav]')) {
+            navigate(e.target.closest('[data-nav]').dataset.nav);
+        }
+    });
+    
+    // Task List
+    document.getElementById('taskList').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-task-id]');
+        if (!btn || btn.classList.contains('cursor-not-allowed')) return;
+        const taskId = btn.getAttribute('data-task-id');
+        const task = TASKS.find(t => t.id === taskId);
+        
+        if (taskId === 'watch_monetag_ad') {
+            try {
+                if (typeof show_9735186 === 'function') {
+                    showHint('Loading ad...');
+                    show_9735186().then(() => {
+                        addBalance(auth.currentUser.uid, task.reward, 'Monetag Ad Reward');
+                        showHint(`+${task.reward} coins earned!`, false);
+                    }).catch(err => {
+                        console.error("Monetag Ad Error:", err);
+                        showHint('Ad not available.', true);
+                    });
+                } else { throw new Error("Monetag function not found."); }
+            } catch(err) { console.error(err); showHint('Ad system failed.', true); }
+        } else {
+            // Logic for other tasks can be added here
+            if (task.url) window.open(task.url, '_blank');
+        }
+    });
+  };
+
+  // --- 7. APP INITIALIZATION ---
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+        mainApp.classList.remove('hide');
+        navBar.classList.remove('hide');
+        document.querySelector('[data-screen="auth"]').classList.add('hide');
+        navigate('profile'); // Default to profile screen on login
+
+        onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+            if (docSnap.exists()) {
+                updateUI(docSnap.data());
+            }
+        });
     } else {
-      // User is logged out
-      loginScreen.classList.remove('hide');
-      mainApp.classList.add('hide');
-      navBar.classList.add('hide');
+        mainApp.classList.add('hide');
+        navBar.classList.add('hide');
+        document.querySelector('[data-screen="auth"]').classList.remove('hide');
     }
   });
 
-  // --- Event Listeners ---
-  signupBtn.addEventListener('click', async () => {
-    const email = loginEmailEl.value;
-    const password = loginPasswordEl.value;
-    authHint.textContent = 'Signing up...';
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Create a new document for the user in Firestore
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
-        name: email.split('@')[0], // Default name
-        email: user.email,
-        balance: 0,
-        referrals: 0,
-        tasksCompleted: [],
-        createdAt: serverTimestamp()
-      });
-      authHint.textContent = 'Signup successful! You are now logged in.';
-    } catch (error) {
-      authHint.textContent = error.message;
-    }
-  });
-
-  loginBtn.addEventListener('click', async () => {
-    const email = loginEmailEl.value;
-    const password = loginPasswordEl.value;
-    authHint.textContent = 'Logging in...';
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      authHint.textContent = '';
-    } catch (error) {
-      authHint.textContent = error.message;
-    }
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    await signOut(auth);
-  });
+  bindEvents();
 </script>
 </body>
 </html>
