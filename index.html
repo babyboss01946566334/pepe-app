@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PEPE BOT — Telegram Mini App</title>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9735186' data-sdk='show_9735186'></script>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg1: '#0b1220',
+            bg2: '#0e1624',
+            card: 'rgba(255,255,255,0.06)',
+            acc: '#22c55e',
+            acc2: '#38bdf8',
+            warn: '#f97316'
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(0,0,0,.25)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Firebase (v10 modular CDN) -->
+  <script type="module" crossorigin src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
+  <script type="module" crossorigin src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
+
+  <style>
+    .glass{backdrop-filter: blur(10px)}
+    .gradient-blob{position:absolute;inset:auto auto -80px -80px;width:320px;height:320px;filter:blur(60px);background:radial-gradient(circle at 30% 30%,#22c55e55,transparent 60%),radial-gradient(circle at 70% 40%,#38bdf855,transparent 60%)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:1rem; cursor: pointer;}
+    .tab-active{background:rgba(255,255,255,.12)}
+    .hide{display:none}
+    .banner{padding:.5rem 1rem;border-radius:.75rem;margin-bottom:.5rem}
+    input:focus, select:focus { border-color: var(--acc); outline: none; }
+    .wd-hint-popup {
+        background-color: rgba(249, 115, 22, 0.2); color: #f97316; padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-align: center;
+        margin-top: 0.5rem; transition: opacity 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-dvh text-white bg-gradient-to-b from-bg1 to-bg2">
+  <div class="relative mx-auto max-w-3xl p-4 sm:p-6 pb-24 space-y-4">
+    <div id="firebaseBanner" class="hide banner bg-warn/20 text-warn text-sm">Warning</div>
+    <div class="gradient-blob"></div>
+
+    <!-- Top Bar -->
+    <header class="flex items-center justify-between glass rounded-b-2xl border-b border-white/10 p-4 shadow-lg">
+      <div class="flex items-center gap-3">
+        <div class="h-11 w-11 rounded-2xl bg-acc grid place-items-center text-black font-extrabold shadow-soft overflow-hidden">
+            <img src="https://www.svgrepo.com/show/473727/pepe-coin.svg" alt="PEPE Coin" class="h-full w-full object-cover">
+        </div>
+        <div>
+          <h1 id="mainHeader" class="text-2xl font-bold tracking-tight">PEPE BOT</h1>
+          <p class="text-xs text-white/70">Telegram Mini App</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- PROFILE SCREEN -->
+    <section data-screen="profile" class="space-y-4">
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <h3 class="font-semibold mb-2">Profile Details</h3>
+        <div class="mt-2 grid sm:grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Name</div><div id="pfName" class="text-lg font-semibold">User</div></div>
+          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Telegram ID</div><div id="pfId" class="text-lg font-semibold">–</div></div>
+          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Referred By</div><div id="pfReferredBy" class="text-lg font-semibold">–</div></div>
+          <div class="rounded-2xl bg-white/5 p-4 text-sm"><div class="opacity-70">Total Referrals</div><div id="pfRefCount" class="text-lg font-semibold">0</div></div>
+        </div>
+      </div>
+      <div id="devFallback" class="mt-4 hidden">
+        <label class="text-xs text-white/70">Not inside Telegram? Enter a name to demo:</label>
+        <div class="mt-2 flex gap-2">
+          <input id="mockName" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border border-white/10" placeholder="Your name" />
+          <button id="mockStart" class="btn bg-acc text-black font-semibold hover:opacity-90">Start</button>
+        </div>
+      </div>
+      <section class="grid grid-cols-2 gap-3">
+        <button id="dailyCheckInBtn" class="action glass rounded-2xl border border-white/10 p-4 bg-card hover:bg-white/10"><div class="text-2xl font-extrabold">+10</div><div class="text-xs text-white/70">Daily Check‑in</div></button>
+        <button id="goToTasksBtn" class="action glass rounded-2xl border border-white/10 p-4 bg-card hover:bg-white/10"><div class="text-2xl font-extrabold">→</div><div class="text-xs text-white/70">Go to Tasks</div></button>
+      </section>
+      <section class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-semibold">Refer & Earn</h3>
+            <p class="text-xs text-white/70">Invite friends and get <span class="font-semibold">+20 coins</span> for each new user.</p>
+          </div>
+          <div class="text-right text-xs opacity-75"><div>Referrals: <span id="refCount">0</span></div></div>
+        </div>
+        <div class="mt-2 space-y-2">
+          <input id="refLink" readonly class="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/10 text-xs" />
+          <div class="flex gap-2">
+            <button id="copyRef" class="btn flex-1 bg-acc text-black font-semibold hover:opacity-90">Copy Link</button>
+            <button id="shareRef" class="btn flex-1 bg-acc2 text-black font-semibold hover:opacity-90">Share</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- TASKS SCREEN -->
+    <section data-screen="tasks" class="space-y-4 hide">
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <h3 class="font-semibold mb-2">Tasks</h3>
+        <p class="text-xs text-white/70">Complete tasks to earn coins. Some tasks are repeatable.</p>
+        <div id="taskList" class="mt-3 grid gap-3"></div>
+      </div>
+    </section>
+
+    <!-- WALLET SCREEN -->
+    <section data-screen="wallet" class="space-y-4 hide">
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <div id="walletOverview">
+            <h3 class="font-semibold mb-2">Wallet Overview</h3>
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl bg-white/5 p-4"><div class="text-xs opacity-70">Balance</div><div id="walletBalance" class="text-3xl font-black">0</div></div>
+              <div class="rounded-2xl bg-white/5 p-4"><div class="text-xs opacity-70">Total Referrals</div><div id="walletRefs" class="text-3xl font-black">0</div></div>
+            </div>
+            <div class="mt-3 flex gap-2"><button id="showWithdrawForm" class="btn bg-acc text-black font-semibold hover:bg-acc/90">Withdraw Funds</button></div>
+        </div>
+        <div id="withdrawForm" class="space-y-4 hide">
+            <h3 class="font-semibold mb-2">Withdrawal Request</h3>
+            <p class="text-xs text-white/70">Minimum withdraw: <span id="minWd">100</span> coins</p>
+            <div class="grid sm:grid-cols-2 gap-3 mt-3">
+              <div class="space-y-2"><label for="wdAmount" class="text-xs text-white/70">Amount</label><input id="wdAmount" type="number" class="w-full rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., 200" /></div>
+              <div class="space-y-2"><label for="wdAddress" class="text-xs text-white/70">Binance UID</label><input id="wdAddress" class="w-full rounded-xl px-3 py-2 bg-white/10 border" placeholder="Please enter your uid" /></div>
+            </div>
+            <div class="mt-3 flex gap-2 items-center">
+              <button id="submitWithdraw" class="btn bg-acc text-black font-semibold hover:bg-acc/90">Submit</button>
+              <button id="hideWithdrawForm" class="btn bg-white/10 text-white font-semibold hover:bg-white/20">Back</button>
+            </div>
+            <div class="flex justify-center"><span id="wdHint" class="opacity-0 wd-hint-popup"></span></div>
+        </div>
+      </div>
+      <div class="glass rounded-3xl border border-white/10 p-5 bg-card shadow-soft">
+        <div class="flex items-center justify-between"><h3 class="font-semibold">My Withdrawal History</h3><span class="text-xs opacity-70">Completed: <span id="completedWdCount">0</span></span></div>
+        <ul id="wdList" class="mt-3 space-y-2 text-sm max-h-64 overflow-auto pr-1"></ul>
+      </div>
+    </section>
+
+    <!-- ADMIN SCREEN -->
+    <section data-screen="admin" class="space-y-4 hide">
+      <div id="adminPanel" class="glass rounded-3xl border border-white/10 p-5 bg-black/40 shadow-soft">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold">Admin Panel</h3>
+          <span class="text-xs text-white/60" id="adminHint"></span>
+        </div>
+        <div class="grid sm:grid-cols-1 gap-4 mt-3">
+          <div class="space-y-2"><label for="setBalance" class="text-xs text-white/70">Set Balance</label><div class="flex gap-2"><input id="setBalance" type="number" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., 500" /><button id="applySet" class="btn bg-acc text-black font-semibold hover:opacity-90">Apply</button></div></div>
+          <div class="space-y-2"><label for="adjustBalance" class="text-xs text-white/70">Adjust Balance (+/−)</label><div class="flex gap-2"><input id="adjustBalance" type="number" class="flex-1 rounded-xl px-3 py-2 bg-white/10 border" placeholder="e.g., +25" /><button id="applyAdjust" class="btn bg-acc2 text-black font-semibold hover:opacity-90">Update</button></div></div>
+          <div class="space-y-2"><label class="text-xs text-white/70">Data Actions</label><div class="flex gap-2"><button id="resetUser" class="btn bg-white/10 hover:bg-white/20">Reset user</button><button id="exportData" class="btn bg-white/10 hover:bg-white/20">Export</button></div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pt-2 pb-8 text-center text-xs text-white/50">© <span id="year"></span> PEPE BOT</footer>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="fixed bottom-0 inset-x-0 mx-auto max-w-3xl bg-white/5 backdrop-blur border-t border-white/10 p-2 rounded-t-2xl shadow-lg">
+    <div id="navGrid" class="grid grid-cols-3 gap-2">
+      <button data-nav="profile" class="btn tab-active font-semibold hover:bg-white/10">Profile</button>
+      <button data-nav="tasks" class="btn font-semibold hover:bg-white/10">Tasks</button>
+      <button data-nav="wallet" class="btn font-semibold hover:bg-white/10">Wallet</button>
+    </div>
+  </nav>
+
+  <script type="module">
+    // --- Firebase Imports ---
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+      runTransaction, collection, addDoc, query, orderBy, onSnapshot
+    } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js';
+
+    // ================== 1. CONFIGURATION ==================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAXvxTPaiP8UoFQH5Jg2O0UovrXrXbJDo",
+      authDomain: "pepe-earning-app.firebaseapp.com",
+      projectId: "pepe-earning-app",
+      storageBucket: "pepe-earning-app.appspot.com",
+      messagingSenderId: "307051092104",
+      appId: "1:307051092104:web:0649d26ebe30d61e63e73d"
+    };
+
+    const REFERRAL_BONUS = 20;
+    const DAILY_REWARD = 10;
+    const MIN_WITHDRAW = 100;
+    const ADMIN_IDS = ["5481629779"];
+
+    const TASKS = [
+      { id: 'watch_monetag_ad', title: 'Watch Ad & Earn', reward: 50, repeatable: true },
+      { id:'join_channel', title:'Join Telegram Channel', reward: 25, url: 'https://t.me/example_pepe_channel' },
+      { id:'follow_twitter', title:'Follow X/Twitter', reward: 30, url: 'https://x.com/example_pepe_bot' },
+      { id:'invite_friend', title:'Invite a friend', reward: 40 },
+    ];
+    
+    // ================== 2. GLOBAL STATE & ELEMENTS ==================
+    const state = { userId: null, name: 'User' };
+    const els = {};
+    const elIds = [
+        'mainHeader', 'navGrid', 'firebaseBanner', 'devFallback', 'mockName', 'mockStart', 'year', 'refLink', 'copyRef', 
+        'shareRef', 'refCount', 'walletOverview', 'withdrawForm', 'showWithdrawForm', 'hideWithdrawForm', 
+        'walletBalance', 'walletRefs', 'wdList', 'completedWdCount', 'minWd', 'wdAmount', 'wdAddress', 
+        'submitWithdraw', 'wdHint', 'pfName', 'pfId', 'pfReferredBy', 'pfRefCount', 'adminPanel', 'adminHint', 
+        'setBalance', 'applySet', 'adjustBalance', 'applyAdjust', 'resetUser', 'exportData', 'taskList',
+        'dailyCheckInBtn', 'goToTasksBtn'
+    ];
+    elIds.forEach(id => els[id] = document.getElementById(id));
+    let db; // Firebase database instance
+
+    // ================== 3. HELPER FUNCTIONS ==================
+    const showHint = (message) => {
+        if (!els.wdHint) return;
+        els.wdHint.textContent = message;
+        els.wdHint.classList.remove('opacity-0');
+        setTimeout(() => els.wdHint.classList.add('opacity-0'), 3000);
+    };
+    
+    const isPermissionDenied = (err) => String(err.message || err).toLowerCase().includes('permission');
+
+    // ================== 4. CORE LOGIC (Database, Tasks, etc.) ==================
+    async function addBalance(uid, delta, reason) {
+        try {
+            if (!db) throw new Error("Firestore not initialized");
+            await runTransaction(db, async (tx) => {
+                const userRef = doc(db, 'users', String(uid));
+                const userDoc = await tx.get(userRef);
+                if (!userDoc.exists()) throw new Error("User does not exist!");
+                const newBalance = Math.max(0, (userDoc.data().balance || 0) + delta);
+                tx.update(userRef, { balance: newBalance });
+            });
+            await addActivity(uid, `${reason} ${delta >= 0 ? '+' : ''}${delta} coins`);
+        } catch (err) {
+            console.error("Balance update failed:", err);
+            showHint("Could not update balance.");
+        }
+    }
+    
+    async function addActivity(uid, text) {
+        try {
+            if (!db) return;
+            await addDoc(collection(db, 'users', String(uid), 'activities'), { text, ts: serverTimestamp() });
+        } catch (err) {
+            console.error("Activity log failed:", err);
+        }
+    }
+
+    async function handleTaskClaim(uid, taskId) {
+        const task = TASKS.find(t => t.id === taskId);
+        if (!task || task.repeatable) return;
+
+        try {
+            const userRef = doc(db, 'users', String(uid));
+            const userDoc = await getDoc(userRef);
+            if (!userDoc.exists()) return;
+            const completedTasks = userDoc.data().tasksCompleted || [];
+            if (completedTasks.includes(taskId)) {
+                showHint("Task already completed!");
+                return;
+            }
+            const newCompleted = [...completedTasks, taskId];
+            const newBalance = (userDoc.data().balance || 0) + task.reward;
+            await updateDoc(userRef, {
+                tasksCompleted: newCompleted,
+                balance: newBalance
+            });
+            await addActivity(uid, `Task '${task.title}' completed`);
+        } catch (err) {
+            console.error("Task claim failed:", err);
+            showHint("Failed to claim task.");
+        }
+    }
+    
+    // ================== 5. UI RENDERING & UPDATES ==================
+    function renderTasks(completed = []) {
+        if (!els.taskList) return;
+        els.taskList.innerHTML = TASKS.map(t => {
+            const isCompleted = !t.repeatable && completed.includes(t.id);
+            return `
+                <div class="flex items-center justify-between rounded-2xl bg-white/5 p-4">
+                    <div>
+                        <div class="font-semibold">${t.title}</div>
+                        <div class="text-xs opacity-70">Reward: +${t.reward} coins</div>
+                    </div>
+                    <button data-task-id="${t.id}" class="btn ${isCompleted ? 'bg-white/10 cursor-not-allowed opacity-60' : 'bg-acc text-black font-semibold'}">
+                        ${isCompleted ? 'Completed' : 'Claim'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateProfileUI(data) {
+        els.pfName.textContent = data.name || 'User';
+        els.pfId.textContent = state.userId;
+        els.pfReferredBy.textContent = data.referredBy || '–';
+        els.pfRefCount.textContent = data.referrals || 0;
+        els.refCount.textContent = data.referrals || 0;
+        els.walletBalance.textContent = data.balance || 0;
+        els.walletRefs.textContent = data.referrals || 0;
+        els.refLink.value = `${location.origin}${location.pathname}?ref=${state.userId}`;
+        renderTasks(data.tasksCompleted || []);
+    }
+
+    function showAdminIfAllowed() {
+        const isAdmin = ADMIN_IDS.includes(state.userId);
+        let adminBtn = document.getElementById('navAdminBtn');
+        if (isAdmin && !adminBtn) {
+            els.navGrid.classList.replace('grid-cols-3', 'grid-cols-4');
+            adminBtn = document.createElement('button');
+            adminBtn.id = 'navAdminBtn';
+            adminBtn.dataset.nav = 'admin';
+            adminBtn.className = 'btn font-semibold hover:bg-white/10';
+            adminBtn.textContent = 'Admin';
+            els.navGrid.appendChild(adminBtn);
+            bindNavEvents();
+        } else if (!isAdmin && adminBtn) {
+            adminBtn.remove();
+            els.navGrid.classList.replace('grid-cols-4', 'grid-cols-3');
+        }
+        if (els.adminHint) els.adminHint.textContent = isAdmin ? `UID: ${state.userId}` : '';
+    }
+    
+    // ================== 6. EVENT BINDING ==================
+    function bindNavEvents() {
+        const screens = Array.from(document.querySelectorAll('[data-screen]'));
+        document.querySelectorAll('nav [data-nav]').forEach(btn => {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => {
+                const tab = newBtn.dataset.nav;
+                screens.forEach(s => s.classList.toggle('hide', s.dataset.screen !== tab));
+                document.querySelectorAll('nav [data-nav]').forEach(b => b.classList.toggle('tab-active', b.dataset.nav === tab));
+            });
+        });
+    }
+
+    function bindAllActions() {
+        bindNavEvents();
+        document.querySelector('[data-nav="profile"]').click(); // Set initial tab
+
+        // Profile Screen Buttons
+        els.dailyCheckInBtn.addEventListener('click', async () => { /* Daily check-in logic to be implemented */ showHint("Daily Check-in Clicked!"); });
+        els.goToTasksBtn.addEventListener('click', () => document.querySelector('[data-nav="tasks"]').click());
+        els.copyRef.addEventListener('click', async () => { try { await navigator.clipboard.writeText(els.refLink.value); showHint('Link copied!'); } catch { showHint('Failed to copy.'); } });
+        els.shareRef.addEventListener('click', async () => { /* Share logic */ showHint("Share Clicked!"); });
+        
+        // Wallet Screen Buttons
+        els.showWithdrawForm.addEventListener('click', () => { els.walletOverview.classList.add('hide'); els.withdrawForm.classList.remove('hide'); });
+        els.hideWithdrawForm.addEventListener('click', () => { els.walletOverview.classList.remove('hide'); els.withdrawForm.classList.add('hide'); });
+        els.submitWithdraw.addEventListener('click', () => { /* Withdraw logic */ });
+
+        // Task List (Event Delegation)
+        els.taskList.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-task-id]');
+            if (!btn || btn.classList.contains('cursor-not-allowed')) return;
+            const taskId = btn.getAttribute('data-task-id');
+            const task = TASKS.find(t => t.id === taskId);
+            
+            if (taskId === 'watch_monetag_ad') {
+                try {
+                    if (typeof show_9735186 === 'function') {
+                        showHint('Loading ad...');
+                        show_9735186().then(() => {
+                            addBalance(state.userId, task.reward, 'Monetag Ad Reward');
+                            showHint(`+${task.reward} coins earned!`);
+                        }).catch(err => {
+                            console.error("Monetag Ad Error:", err);
+                            showHint('Ad not available right now.');
+                        });
+                    } else {
+                        throw new Error("Monetag function not found.");
+                    }
+                } catch(err) {
+                    console.error(err);
+                    showHint('Ad system failed to load.');
+                }
+            } else {
+                if (task.url) window.open(task.url, '_blank');
+                await handleTaskClaim(state.userId, taskId);
+            }
+        });
+
+        // Admin Panel Buttons
+        els.applySet.addEventListener('click', async () => { /* Admin logic */ });
+        els.applyAdjust.addEventListener('click', async () => { /* Admin logic */ });
+        els.resetUser.addEventListener('click', async () => { /* Admin logic */ });
+        els.exportData.addEventListener('click', async () => { /* Admin logic */ });
+    }
+
+    // ================== 7. INITIALIZATION ==================
+    async function init() {
+        els.year.textContent = new Date().getFullYear();
+        bindAllActions();
+
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
+            tg.ready();
+            const user = tg.initDataUnsafe.user;
+            state.userId = String(user.id);
+            state.name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'User';
+            
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                state.firebaseEnabled = true;
+
+                const userRef = doc(db, 'users', state.userId);
+                let userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        name: state.name, balance: 0, createdAt: serverTimestamp(), referrals: 0,
+                        tasksCompleted: []
+                    });
+                }
+                
+                onSnapshot(userRef, (doc) => {
+                    if (doc.exists()) {
+                        updateProfileUI(doc.data());
+                        showAdminIfAllowed();
+                    }
+                });
+
+            } catch (err) {
+                console.error("Firebase Initialization Failed:", err);
+                switchToLocal("Could not connect to database.");
+            }
+
+        } else {
+            els.devFallback.classList.remove('hidden');
+            els.mockStart.addEventListener('click', () => { /* Fallback logic */ });
+        }
+    }
+
+    init(); // Start the application
+  </script>
+
+</body>
+</html>
